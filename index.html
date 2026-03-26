@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoría Instagram — La Deco</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#0a0a0a;color:#e8e6e1;line-height:1.7}
+.container{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+
+.header{text-align:center;padding:60px 0 48px;border-bottom:1px solid rgba(255,255,255,.08)}
+.header .tag{display:inline-block;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#7a7a7a;margin-bottom:16px}
+.header h1{font-family:'DM Serif Display',serif;font-size:42px;color:#fff;margin-bottom:8px}
+.header .sub{font-size:15px;color:#888;margin-bottom:24px}
+.header .client{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:40px;padding:8px 20px 8px 10px;font-size:14px;color:#bbb}
+.header .client .dot{width:32px;height:32px;border-radius:50%;background:#1a6b3c;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:32px 0}
+.metric{text-align:center;padding:20px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px}
+.metric .m-val{font-family:'DM Serif Display',serif;font-size:28px;color:#fff}
+.metric .m-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#666;margin-top:4px}
+.metric.bad .m-val{color:#e24b4a}
+
+.score-section{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:48px 0}
+.score-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:28px;position:relative;overflow:hidden}
+.score-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.score-card.red::before{background:linear-gradient(90deg,#e24b4a,#e24b4a80)}
+.score-card.amber::before{background:linear-gradient(90deg,#ef9f27,#ef9f2780)}
+.score-card .label{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#666;margin-bottom:12px}
+.score-card .score{font-family:'DM Serif Display',serif;font-size:48px;line-height:1}
+.score-card.red .score{color:#e24b4a}
+.score-card.amber .score{color:#ef9f27}
+.score-card .out-of{font-size:18px;color:#555}
+.score-card .desc{font-size:13px;color:#777;margin-top:8px}
+.overall{grid-column:1/-1;text-align:center;padding:40px}
+.overall .score{font-size:72px}
+.overall .verdict{font-size:18px;color:#e24b4a;margin-top:4px;font-weight:500}
+
+.chart-box{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:28px;margin:24px 0}
+.chart-box h4{font-family:'DM Serif Display',serif;font-size:18px;color:#fff;margin-bottom:4px}
+.chart-box .chart-sub{font-size:12px;color:#666;margin-bottom:20px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0}
+.chart-row .chart-box{margin:0}
+
+/* Horizontal bars */
+.hbar{margin:12px 0}
+.hbar-item{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.hbar-label{width:150px;font-size:13px;color:#999;text-align:right;flex-shrink:0}
+.hbar-track{flex:1;height:30px;background:rgba(255,255,255,.04);border-radius:8px;overflow:hidden;position:relative}
+.hbar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;transition:width 1.5s cubic-bezier(.22,1,.36,1);width:0}
+.hbar-fill.r{background:linear-gradient(90deg,rgba(226,75,74,.2),#e24b4a);color:#fcc}
+.hbar-fill.a{background:linear-gradient(90deg,rgba(239,159,39,.2),#ef9f27);color:#fec}
+.hbar-fill.g{background:linear-gradient(90deg,rgba(99,153,34,.2),#639922);color:#cfc}
+.hbar-fill.b{background:linear-gradient(90deg,rgba(58,111,216,.2),#3a6fd8);color:#cdf}
+
+/* Radar via SVG */
+.radar-wrap{display:flex;justify-content:center;padding:10px 0}
+.radar-wrap svg text{font-family:'DM Sans',sans-serif}
+
+/* Donut via SVG */
+.donut-wrap{display:flex;justify-content:center;padding:10px 0}
+.donut-legend{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;margin-top:16px}
+.donut-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#999}
+.donut-legend-item .swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* Funnel */
+.funnel{margin:20px auto;max-width:500px}
+.funnel-step{text-align:center;margin-bottom:4px}
+.funnel-bar{height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#fff;margin:0 auto;cursor:default;transition:transform .2s}
+.funnel-bar:hover{transform:scale(1.02);filter:brightness(1.15)}
+.funnel-drop{font-size:11px;color:#e24b4a;margin:6px 0 10px;font-weight:500;text-align:center}
+.funnel-arrow{color:#555;margin:4px 0;font-size:16px;text-align:center}
+
+/* Tabs */
+.tab-group{display:flex;gap:4px;margin-bottom:20px;background:rgba(255,255,255,.04);border-radius:10px;padding:4px}
+.tab-btn{flex:1;padding:10px;border:none;background:transparent;color:#777;font-size:13px;font-family:'DM Sans',sans-serif;border-radius:8px;cursor:pointer;transition:all .3s}
+.tab-btn.active{background:rgba(255,255,255,.08);color:#fff;font-weight:500}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* Comp table */
+.comp-table{width:100%;border-collapse:separate;border-spacing:0;margin:20px 0}
+.comp-table th{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#666;padding:12px 16px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08)}
+.comp-table td{font-size:14px;color:#bbb;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.comp-table tr:last-child td{border-bottom:none}
+.val-bad{color:#e24b4a;font-weight:700}
+.val-good{color:#639922;font-weight:700}
+.val-avg{color:#ef9f27;font-weight:700}
+
+/* Sections */
+.section{margin-top:56px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.section-num{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#888}
+.section-title{font-family:'DM Serif Display',serif;font-size:26px;color:#fff}
+
+.finding{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:24px;margin-bottom:16px}
+.finding .f-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.finding .status{width:8px;height:8px;border-radius:50%}
+.finding .status.critical{background:#e24b4a}
+.finding .status.warning{background:#ef9f27}
+.finding .f-title{font-size:15px;font-weight:700;color:#fff}
+.finding .f-body{font-size:14px;color:#999;padding-left:18px}
+.finding .f-body strong{color:#ccc;font-weight:500}
+
+.quote{border-left:3px solid #e24b4a;padding:16px 20px;margin:24px 0;background:rgba(226,75,74,.04);border-radius:0 8px 8px 0}
+.quote p{font-size:15px;font-style:italic;color:#ccc}
+
+.priorities{margin-top:56px;padding:32px;background:linear-gradient(135deg,rgba(226,75,74,.06),rgba(239,159,39,.04));border:1px solid rgba(226,75,74,.12);border-radius:16px}
+.priorities h3{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;margin-bottom:20px}
+.priority-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.priority-item:last-child{border-bottom:none}
+.p-num{width:28px;height:28px;border-radius:50%;background:rgba(226,75,74,.15);color:#e24b4a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-top:2px}
+.p-content .p-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.p-content .p-desc{font-size:13px;color:#888}
+
+.footer{text-align:center;margin-top:64px;padding-top:32px;border-top:1px solid rgba(255,255,255,.06);color:#555;font-size:12px}
+
+.animate-in{opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.22,1,.36,1)}
+.animate-in.visible{opacity:1;transform:translateY(0)}
+
+/* SVG line chart */
+.line-chart-wrap{padding:10px 0}
+.line-chart-wrap svg text{font-family:'DM Sans',sans-serif}
+
+/* Gauge circles */
+.gauge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
+.gauge{text-align:center;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:24px 16px}
+.gauge svg{display:block;margin:0 auto 12px}
+.gauge .g-label{font-size:12px;color:#666;letter-spacing:1px;text-transform:uppercase}
+.gauge .g-val{font-family:'DM Serif Display',serif;font-size:20px;margin-top:4px}
+
+@keyframes fillGauge{from{stroke-dashoffset:251.2}to{stroke-dashoffset:var(--target)}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header animate-in">
+  <div class="tag">Auditoría de Instagram</div>
+  <h1>@ladeco.oficial</h1>
+  <div class="sub">Diagnóstico completo con análisis interactivo &bull; Marzo 2026</div>
+  <div class="client"><div class="dot">LD</div>La Deco — Blanquería, Hogar & Deco</div>
+</div>
+
+<div class="metrics animate-in">
+  <div class="metric"><div class="m-val" data-count="2155">0</div><div class="m-label">Seguidores</div></div>
+  <div class="metric"><div class="m-val" data-count="2176">0</div><div class="m-label">Seguidos</div></div>
+  <div class="metric"><div class="m-val" data-count="191">0</div><div class="m-label">Publicaciones</div></div>
+  <div class="metric bad"><div class="m-val">~0.8%</div><div class="m-label">Engagement</div></div>
+</div>
+
+<!-- GAUGE CIRCLES -->
+<div class="gauge-row animate-in">
+  <div class="gauge">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="#e24b4a" stroke-width="8" stroke-linecap="round"
+        stroke-dasharray="314.16" stroke-dashoffset="248.2" transform="rotate(-90 60 60)"
+        style="transition:stroke-dashoffset 1.5s ease-out"/>
+      <text x="60" y="56" text-anchor="middle" fill="#e24b4a" font-size="28" font-weight="700" font-family="'DM Serif Display',serif">2</text>
+      <text x="60" y="74" text-anchor="middle" fill="#666" font-size="11">/10</text>
+    </svg>
+    <div class="g-label">Perfil & Bio</div>
+  </div>
+  <div class="gauge">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="#e24b4a" stroke-width="8" stroke-linecap="round"
+        stroke-dasharray="314.16" stroke-dashoffset="282.7" transform="rotate(-90 60 60)"/>
+      <text x="60" y="56" text-anchor="middle" fill="#e24b4a" font-size="28" font-weight="700" font-family="'DM Serif Display',serif">1</text>
+      <text x="60" y="74" text-anchor="middle" fill="#666" font-size="11">/10</text>
+    </svg>
+    <div class="g-label">Estrategia Ventas</div>
+  </div>
+  <div class="gauge">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="#ef9f27" stroke-width="8" stroke-linecap="round"
+        stroke-dasharray="314.16" stroke-dashoffset="219.9" transform="rotate(-90 60 60)"/>
+      <text x="60" y="56" text-anchor="middle" fill="#ef9f27" font-size="28" font-weight="700" font-family="'DM Serif Display',serif">3</text>
+      <text x="60" y="74" text-anchor="middle" fill="#666" font-size="11">/10</text>
+    </svg>
+    <div class="g-label">Identidad Marca</div>
+  </div>
+</div>
+
+<!-- OVERALL SCORE -->
+<div class="score-section animate-in">
+  <div class="score-card overall red">
+    <div class="label">Puntuación General</div>
+    <div class="score">2.3<span class="out-of"> /10</span></div>
+    <div class="verdict">Necesita reconstrucción completa</div>
+  </div>
+  <div class="score-card red"><div class="label">Contenido Visual</div><div class="score">2<span class="out-of"> /10</span></div><div class="desc">Fotos de catálogo, sin lifestyle, sin edición</div></div>
+  <div class="score-card red"><div class="label">Engagement</div><div class="score">1.5<span class="out-of"> /10</span></div><div class="desc">~18 likes por post, 0 comentarios</div></div>
+  <div class="score-card red"><div class="label">Posicionamiento</div><div class="score">2<span class="out-of"> /10</span></div><div class="desc">Se percibe como revendedor genérico</div></div>
+</div>
+
+<!-- RADAR SVG -->
+<div class="chart-box animate-in">
+  <h4>Radar de rendimiento</h4>
+  <div class="chart-sub">La Deco (rojo) vs. mínimo aceptable (verde) — cada eje sobre 10</div>
+  <div class="radar-wrap">
+    <svg width="400" height="380" viewBox="0 0 400 380">
+      <g transform="translate(200,180)">
+        <!-- Grid -->
+        <polygon points="0,-150 129.9,75 -129.9,75" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>
+        <polygon points="0,-120 103.9,60 -103.9,60" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>
+        <polygon points="0,-90 77.9,45 -77.9,45" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>
+        <polygon points="0,-60 51.9,30 -51.9,30" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>
+        <polygon points="0,-30 25.9,15 -25.9,15" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>
+        <!-- Axes (6 axes) -->
+        <line x1="0" y1="0" x2="0" y2="-150" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="129.9" y2="75" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="129.9" y2="-75" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="0" y2="150" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="-129.9" y2="75" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="-129.9" y2="-75" stroke="rgba(255,255,255,.08)" stroke-width="0.5"/>
+        <!-- Min acceptable (6/10 = 90px) -->
+        <polygon points="0,-90 77.9,-45 77.9,45 0,90 -77.9,45 -77.9,-45" fill="rgba(99,153,34,.08)" stroke="#639922" stroke-width="1.5" stroke-dasharray="5,5"/>
+        <!-- La Deco actual -->
+        <polygon points="0,-30 38.9,-15 19.5,22.5 0,22.5 -38.9,11.25 -25.9,-15" fill="rgba(226,75,74,.15)" stroke="#e24b4a" stroke-width="2"/>
+        <circle cx="0" cy="-30" r="4" fill="#e24b4a"/><!-- Bio 2/10 -->
+        <circle cx="38.9" cy="-15" r="4" fill="#e24b4a"/><!-- Contenido 2/10 -->
+        <circle cx="19.5" cy="22.5" r="4" fill="#e24b4a"/><!-- Ventas 1/10 -->
+        <circle cx="0" cy="22.5" r="4" fill="#ef9f27"/><!-- Identidad 3/10 -->
+        <circle cx="-38.9" cy="11.25" r="4" fill="#e24b4a"/><!-- Engagement 1.5/10 -->
+        <circle cx="-25.9" cy="-15" r="4" fill="#e24b4a"/><!-- Posicionamiento 2/10 -->
+        <!-- Labels -->
+        <text x="0" y="-160" text-anchor="middle" fill="#aaa" font-size="11">Perfil & Bio</text>
+        <text x="148" y="-78" text-anchor="start" fill="#aaa" font-size="11">Contenido</text>
+        <text x="148" y="82" text-anchor="start" fill="#aaa" font-size="11">Ventas</text>
+        <text x="0" y="172" text-anchor="middle" fill="#aaa" font-size="11">Identidad</text>
+        <text x="-148" y="82" text-anchor="end" fill="#aaa" font-size="11">Engagement</text>
+        <text x="-148" y="-78" text-anchor="end" fill="#aaa" font-size="11">Posicionamiento</text>
+      </g>
+      <!-- Legend -->
+      <circle cx="100" cy="360" r="5" fill="#e24b4a"/>
+      <text x="110" y="364" fill="#999" font-size="11">La Deco</text>
+      <circle cx="200" cy="360" r="5" fill="none" stroke="#639922" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="210" y="364" fill="#999" font-size="11">Mínimo aceptable</text>
+    </svg>
+  </div>
+</div>
+
+<div class="quote animate-in">
+  <p>"La Deco no tiene un problema de alcance. Tiene un problema de identidad, estructura y estrategia. Instagram es su única vidriera, y esa vidriera no vende — solo muestra."</p>
+</div>
+
+<!-- ENGAGEMENT COMPARISON -->
+<div class="chart-box animate-in">
+  <h4>Engagement: La Deco vs. el mercado</h4>
+  <div class="chart-sub">Comparación con promedios de cuentas de deco (2.000-5.000 seguidores)</div>
+  <div class="hbar">
+    <div class="hbar-item"><span class="hbar-label">La Deco</span><div class="hbar-track"><div class="hbar-fill r" data-width="12">0.8%</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Promedio deco</span><div class="hbar-track"><div class="hbar-fill a" data-width="49">3.2%</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Algo Bonito (ref)</span><div class="hbar-track"><div class="hbar-fill b" data-width="63">4.1%</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Top performers</span><div class="hbar-track"><div class="hbar-fill g" data-width="100">6.5%</div></div></div>
+  </div>
+</div>
+
+<!-- LIKES & COMMENTS -->
+<div class="chart-row animate-in">
+  <div class="chart-box">
+    <h4>Likes promedio por post</h4>
+    <div class="chart-sub">La Deco vs. mercado</div>
+    <div class="hbar">
+      <div class="hbar-item"><span class="hbar-label">La Deco</span><div class="hbar-track"><div class="hbar-fill r" data-width="7">18</div></div></div>
+      <div class="hbar-item"><span class="hbar-label">Promedio</span><div class="hbar-track"><div class="hbar-fill a" data-width="34">85</div></div></div>
+      <div class="hbar-item"><span class="hbar-label">Top</span><div class="hbar-track"><div class="hbar-fill g" data-width="100">250+</div></div></div>
+    </div>
+  </div>
+  <div class="chart-box">
+    <h4>Comentarios promedio por post</h4>
+    <div class="chart-sub">La Deco vs. mercado</div>
+    <div class="hbar">
+      <div class="hbar-item"><span class="hbar-label">La Deco</span><div class="hbar-track"><div class="hbar-fill r" data-width="3">~0</div></div></div>
+      <div class="hbar-item"><span class="hbar-label">Promedio</span><div class="hbar-track"><div class="hbar-fill a" data-width="27">6</div></div></div>
+      <div class="hbar-item"><span class="hbar-label">Top</span><div class="hbar-track"><div class="hbar-fill g" data-width="100">22</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT DISTRIBUTION DONUTS -->
+<div class="chart-row animate-in">
+  <div class="chart-box">
+    <h4>Contenido actual</h4>
+    <div class="chart-sub">Distribución de los 191 posts</div>
+    <div class="donut-wrap">
+      <svg width="200" height="200" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="28"/>
+        <!-- 78% catalog = 280.8deg -->
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#e24b4a" stroke-width="28"
+          stroke-dasharray="343.6 96.2" stroke-dashoffset="110" transform="rotate(-90 100 100)"/>
+        <!-- 8% reels -->
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#5a5ad8" stroke-width="28"
+          stroke-dasharray="35.2 404.6" stroke-dashoffset="-233.6" transform="rotate(-90 100 100)"/>
+        <!-- 6% milestones -->
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#ef9f27" stroke-width="28"
+          stroke-dasharray="26.4 413.4" stroke-dashoffset="-268.8" transform="rotate(-90 100 100)"/>
+        <!-- 5% efem -->
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#b05535" stroke-width="28"
+          stroke-dasharray="22 417.8" stroke-dashoffset="-295.2" transform="rotate(-90 100 100)"/>
+        <!-- 3% valor -->
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#639922" stroke-width="28"
+          stroke-dasharray="13.2 426.6" stroke-dashoffset="-317.2" transform="rotate(-90 100 100)"/>
+        <text x="100" y="96" text-anchor="middle" fill="#e24b4a" font-size="28" font-weight="700" font-family="'DM Serif Display',serif">78%</text>
+        <text x="100" y="114" text-anchor="middle" fill="#666" font-size="10">catálogo</text>
+      </svg>
+    </div>
+    <div class="donut-legend">
+      <div class="donut-legend-item"><div class="swatch" style="background:#e24b4a"></div>Fotos catálogo (78%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#5a5ad8"></div>Videos (8%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#ef9f27"></div>Milestones (6%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#b05535"></div>Efemérides (5%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#639922"></div>Contenido de valor (3%)</div>
+    </div>
+  </div>
+  <div class="chart-box">
+    <h4>Contenido ideal</h4>
+    <div class="chart-sub">Lo que debería publicar</div>
+    <div class="donut-wrap">
+      <svg width="200" height="200" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="28"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#639922" stroke-width="28"
+          stroke-dasharray="110 329.8" stroke-dashoffset="110" transform="rotate(-90 100 100)"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#5ad8a0" stroke-width="28"
+          stroke-dasharray="88 351.8" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#3a6fd8" stroke-width="28"
+          stroke-dasharray="110 329.8" stroke-dashoffset="-88" transform="rotate(-90 100 100)"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#ef9f27" stroke-width="28"
+          stroke-dasharray="66 373.8" stroke-dashoffset="-198" transform="rotate(-90 100 100)"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#d85a30" stroke-width="28"
+          stroke-dasharray="44 395.8" stroke-dashoffset="-264" transform="rotate(-90 100 100)"/>
+        <text x="100" y="96" text-anchor="middle" fill="#639922" font-size="22" font-weight="700" font-family="'DM Serif Display',serif">MIX</text>
+        <text x="100" y="114" text-anchor="middle" fill="#666" font-size="10">balanceado</text>
+      </svg>
+    </div>
+    <div class="donut-legend">
+      <div class="donut-legend-item"><div class="swatch" style="background:#639922"></div>Lifestyle (25%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#5ad8a0"></div>Tips deco (20%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#3a6fd8"></div>Reels (25%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#ef9f27"></div>Producto+precio (15%)</div>
+      <div class="donut-legend-item"><div class="swatch" style="background:#d85a30"></div>Prueba social (10%)</div>
+    </div>
+  </div>
+</div>
+
+<!-- FUNNEL -->
+<div class="chart-box animate-in">
+  <h4>Embudo de conversión actual vs. óptimo</h4>
+  <div class="chart-sub">Por cada 1.000 personas que ven un post, ¿cuántas compran?</div>
+  <div class="tab-group">
+    <button class="tab-btn active" onclick="switchTab('funnel',0)">Situación actual</button>
+    <button class="tab-btn" onclick="switchTab('funnel',1)">Con estructura optimizada</button>
+  </div>
+  <div id="tab-funnel-0" class="tab-content active">
+    <div class="funnel">
+      <div class="funnel-step"><div class="funnel-bar" style="width:100%;background:#3a6fd8">1.000 ven el post</div></div>
+      <div class="funnel-arrow">↓</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:70%;background:#5a5ad8">80 visitan el perfil</div></div>
+      <div class="funnel-drop">-92% se pierden (contenido no atrae)</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:40%;background:#8a4ad8">12 buscan cómo comprar</div></div>
+      <div class="funnel-drop">-85% se van (no hay link en bio)</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:18%;background:#c03a5a">3 mandan DM</div></div>
+      <div class="funnel-drop">-75% abandonan (fricción del DM)</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:8%;background:#e24b4a">~0-1 compran</div></div>
+      <div class="funnel-drop" style="font-size:13px;color:#e24b4a;font-weight:700">Tasa de conversión: ~0.05%</div>
+    </div>
+  </div>
+  <div id="tab-funnel-1" class="tab-content">
+    <div class="funnel">
+      <div class="funnel-step"><div class="funnel-bar" style="width:100%;background:#3a6fd8">1.000 ven el reel/post</div></div>
+      <div class="funnel-arrow">↓</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:78%;background:#2d8a5e">200 visitan el perfil</div></div>
+      <div class="funnel-drop" style="color:#ef9f27">-80% (hook + lifestyle)</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:55%;background:#2d8a5e">100 hacen clic en link</div></div>
+      <div class="funnel-drop" style="color:#ef9f27">-50% (bio + CTA claro)</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:35%;background:#2d8a5e">40 ven productos</div></div>
+      <div class="funnel-drop" style="color:#ef9f27">-60% (tienda optimizada)</div>
+      <div class="funnel-step"><div class="funnel-bar" style="width:18%;background:#1a6b3c">10-15 compran</div></div>
+      <div class="funnel-drop" style="font-size:13px;color:#639922;font-weight:700">Conversión: ~1.2% (24x mejora)</div>
+    </div>
+  </div>
+</div>
+
+<!-- DIAGNÓSTICO BARRAS -->
+<div class="chart-box animate-in">
+  <h4>Diagnóstico por área</h4>
+  <div class="chart-sub">Nivel actual vs. mínimo necesario (línea verde)</div>
+  <div class="hbar" id="diagBars">
+    <div class="hbar-item"><span class="hbar-label">Perfil & Bio</span><div class="hbar-track"><div class="hbar-fill r" data-width="20">2/10</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Contenido Visual</span><div class="hbar-track"><div class="hbar-fill r" data-width="20">2/10</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Estrategia Ventas</span><div class="hbar-track"><div class="hbar-fill r" data-width="10">1/10</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Identidad Marca</span><div class="hbar-track"><div class="hbar-fill a" data-width="30">3/10</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Engagement</span><div class="hbar-track"><div class="hbar-fill r" data-width="15">1.5/10</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Posicionamiento</span><div class="hbar-track"><div class="hbar-fill r" data-width="20">2/10</div></div></div>
+    <div class="hbar-item"><span class="hbar-label" style="color:#639922">Mínimo aceptable</span><div class="hbar-track"><div class="hbar-fill g" data-width="60" style="opacity:.3">6/10</div></div></div>
+  </div>
+</div>
+
+<!-- WASTE CHART -->
+<div class="chart-box animate-in">
+  <h4>¿Qué % del feed genera ventas?</h4>
+  <div class="chart-sub">Análisis de los 191 posts según contribución comercial</div>
+  <div class="hbar">
+    <div class="hbar-item"><span class="hbar-label">Genera ventas</span><div class="hbar-track"><div class="hbar-fill g" data-width="4">3%</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Potencial comercial</span><div class="hbar-track"><div class="hbar-fill a" data-width="16">12%</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">No aporta nada</span><div class="hbar-track"><div class="hbar-fill r" data-width="100">75%</div></div></div>
+    <div class="hbar-item"><span class="hbar-label">Daña la imagen</span><div class="hbar-track"><div class="hbar-fill r" data-width="13" style="background:linear-gradient(90deg,rgba(121,31,31,.2),#791f1f);color:#e99">10%</div></div></div>
+  </div>
+</div>
+
+<!-- GROWTH LINE -->
+<div class="chart-box animate-in">
+  <h4>Crecimiento de seguidores (desde posts de milestones)</h4>
+  <div class="chart-sub">La Deco (rojo) vs. crecimiento esperado con estrategia (verde)</div>
+  <div class="line-chart-wrap">
+    <svg width="100%" viewBox="0 0 700 280">
+      <!-- Grid -->
+      <line x1="60" y1="20" x2="60" y2="230" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>
+      <line x1="60" y1="230" x2="670" y2="230" stroke="rgba(255,255,255,.06)" stroke-width="0.5"/>
+      <line x1="60" y1="170" x2="670" y2="170" stroke="rgba(255,255,255,.03)" stroke-width="0.5"/>
+      <line x1="60" y1="110" x2="670" y2="110" stroke="rgba(255,255,255,.03)" stroke-width="0.5"/>
+      <line x1="60" y1="50" x2="670" y2="50" stroke="rgba(255,255,255,.03)" stroke-width="0.5"/>
+      <!-- Y axis labels -->
+      <text x="55" y="234" text-anchor="end" fill="#666" font-size="10">0</text>
+      <text x="55" y="174" text-anchor="end" fill="#666" font-size="10">2k</text>
+      <text x="55" y="114" text-anchor="end" fill="#666" font-size="10">5k</text>
+      <text x="55" y="54" text-anchor="end" fill="#666" font-size="10">8k</text>
+      <!-- X axis labels -->
+      <text x="60" y="248" text-anchor="middle" fill="#666" font-size="9">Inicio</text>
+      <text x="147" y="248" text-anchor="middle" fill="#666" font-size="9">1.600</text>
+      <text x="234" y="248" text-anchor="middle" fill="#666" font-size="9">1.700</text>
+      <text x="321" y="248" text-anchor="middle" fill="#666" font-size="9">1.800</text>
+      <text x="408" y="248" text-anchor="middle" fill="#666" font-size="9">1.900</text>
+      <text x="495" y="248" text-anchor="middle" fill="#666" font-size="9">2.000</text>
+      <text x="582" y="248" text-anchor="middle" fill="#666" font-size="9">2.100</text>
+      <text x="670" y="248" text-anchor="middle" fill="#666" font-size="9">Hoy</text>
+      <!-- Expected growth (green dashed) -->
+      <polyline points="60,230 147,182 234,172 321,157 408,134 495,100 582,60 670,30" fill="none" stroke="#639922" stroke-width="1.5" stroke-dasharray="6,4" opacity=".6"/>
+      <!-- Actual growth (red solid) -->
+      <polygon points="60,230 147,182 234,178 321,174 408,170 495,166 582,163 670,161.5 670,230 60,230" fill="rgba(226,75,74,.08)" stroke="none"/>
+      <polyline points="60,230 147,182 234,178 321,174 408,170 495,166 582,163 670,161.5" fill="none" stroke="#e24b4a" stroke-width="2"/>
+      <!-- Dots -->
+      <circle cx="147" cy="182" r="4" fill="#e24b4a"/><circle cx="234" cy="178" r="4" fill="#e24b4a"/>
+      <circle cx="321" cy="174" r="4" fill="#e24b4a"/><circle cx="408" cy="170" r="4" fill="#e24b4a"/>
+      <circle cx="495" cy="166" r="4" fill="#e24b4a"/><circle cx="582" cy="163" r="4" fill="#e24b4a"/>
+      <circle cx="670" cy="161.5" r="4" fill="#e24b4a"/>
+      <!-- Legend -->
+      <line x1="180" y1="270" x2="200" y2="270" stroke="#e24b4a" stroke-width="2"/>
+      <text x="205" y="274" fill="#999" font-size="10">La Deco real</text>
+      <line x1="340" y1="270" x2="360" y2="270" stroke="#639922" stroke-width="1.5" stroke-dasharray="6,4"/>
+      <text x="365" y="274" fill="#999" font-size="10">Con estrategia</text>
+    </svg>
+  </div>
+</div>
+
+<!-- COMP TABLE -->
+<div class="chart-box animate-in">
+  <h4>La Deco vs. competidoras del mismo tamaño</h4>
+  <div class="chart-sub">Comparación con cuentas de deco/blanquería en Argentina</div>
+  <table class="comp-table">
+    <thead><tr><th>Métrica</th><th>La Deco</th><th>Promedio</th><th>Top performers</th></tr></thead>
+    <tbody>
+      <tr><td>Engagement rate</td><td class="val-bad">0.8%</td><td class="val-avg">3.2%</td><td class="val-good">6.5%</td></tr>
+      <tr><td>Likes promedio</td><td class="val-bad">18</td><td class="val-avg">85</td><td class="val-good">250+</td></tr>
+      <tr><td>Comentarios/post</td><td class="val-bad">0</td><td class="val-avg">4-8</td><td class="val-good">15-30</td></tr>
+      <tr><td>Highlights activos</td><td class="val-bad">1</td><td class="val-avg">5-6</td><td class="val-good">8-10</td></tr>
+      <tr><td>Link en bio</td><td class="val-bad">No</td><td class="val-good">Sí</td><td class="val-good">Sí + Tienda</td></tr>
+      <tr><td>Reels/semana</td><td class="val-bad">~0</td><td class="val-avg">2-3</td><td class="val-good">5-7</td></tr>
+      <tr><td>Contenido lifestyle</td><td class="val-bad">0%</td><td class="val-avg">40%</td><td class="val-good">70%</td></tr>
+      <tr><td>Prueba social</td><td class="val-bad">No</td><td class="val-avg">Algo</td><td class="val-good">Constante</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- HALLAZGOS -->
+<div class="section animate-in">
+  <div class="section-header"><div class="section-num">1</div><div class="section-title">Perfil & Bio</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Sin link en bio = sin caja registradora</div></div><div class="f-body">No hay link visible. <strong>No hay forma de comprar</strong> para quien llega al perfil.</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Bio genérica que no diferencia</div></div><div class="f-body"><strong>"La Deco Todo lo que hace que tu casa se sienta Hogar."</strong> Sin propuesta de valor, sin CTA, sin diferencial.</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Solo 1 highlight sin estrategia</div></div><div class="f-body">Un solo highlight "Destacada". Deberían existir: <strong>Catálogo, Envíos, Reseñas, Ofertas, Novedades.</strong></div></div>
+  <div class="finding"><div class="f-header"><div class="status warning"></div><div class="f-title">Ratio seguidos/seguidores 1:1</div></div><div class="f-body">2.155/2.176 sugiere <strong>follow/unfollow</strong> con seguidores de baja calidad.</div></div>
+</div>
+
+<div class="section animate-in">
+  <div class="section-header"><div class="section-num">2</div><div class="section-title">Contenido Visual</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Contenido de catálogo, no de marca</div></div><div class="f-body">90% son <strong>fotos de proveedores</strong>. Sin fotos propias ni ambientación lifestyle.</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Diseño visual inconsistente</div></div><div class="f-body">Cada post tiene colores y tipografías diferentes. <strong>No hay sistema visual.</strong></div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">6 posts de milestones de seguidores</div></div><div class="f-body">De 1.600 a 2.100. <strong>No aportan nada comercial</strong> y ocupan espacio valioso.</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Cero contenido de valor + sin rostros</div></div><div class="f-body">Sin tips de deco, sin personas. <strong>Los rostros generan +38% engagement.</strong></div></div>
+</div>
+
+<div class="section animate-in">
+  <div class="section-header"><div class="section-num">3</div><div class="section-title">Estrategia de Ventas</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Cero CTAs + sin embudo</div></div><div class="f-body"><strong>Los posts nunca piden la venta.</strong> No hay camino post → link → compra.</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Sin precios + sin prueba social</div></div><div class="f-body">No muestra precios ni testimonios. <strong>La prueba social es el motor de compra #1.</strong></div></div>
+</div>
+
+<div class="section animate-in">
+  <div class="section-header"><div class="section-num">4</div><div class="section-title">Engagement & Alcance</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">0.8% engagement vs. 3-6% saludable</div></div><div class="f-body">El algoritmo <strong>castiga el bajo engagement</strong> mostrando menos el contenido.</div></div>
+  <div class="finding"><div class="f-header"><div class="status critical"></div><div class="f-title">Sin Reels</div></div><div class="f-body"><strong>El formato con más alcance orgánico en 2026</strong> y la cuenta no lo usa.</div></div>
+</div>
+
+<!-- PRIORIDADES -->
+<div class="priorities animate-in">
+  <h3>Plan de acción: las 7 prioridades</h3>
+  <div class="priority-item"><div class="p-num">1</div><div class="p-content"><div class="p-title">Poner link en bio HOY</div><div class="p-desc">Linktree con WhatsApp + catálogo. Sin esto, nada importa.</div></div></div>
+  <div class="priority-item"><div class="p-num">2</div><div class="p-content"><div class="p-title">Reescribir la bio</div><div class="p-desc">Propuesta de valor + diferencial + CTA claro.</div></div></div>
+  <div class="priority-item"><div class="p-num">3</div><div class="p-content"><div class="p-title">Crear 5 highlights estratégicos</div><div class="p-desc">Catálogo, Cómo comprar, Envíos, Reseñas, Novedades.</div></div></div>
+  <div class="priority-item"><div class="p-num">4</div><div class="p-content"><div class="p-title">Sistema visual consistente</div><div class="p-desc">3-4 colores, 2 tipografías, templates por tipo de post.</div></div></div>
+  <div class="priority-item"><div class="p-num">5</div><div class="p-content"><div class="p-title">Archivar posts de milestones</div><div class="p-desc">6 posts que ensucian el feed y no venden.</div></div></div>
+  <div class="priority-item"><div class="p-num">6</div><div class="p-content"><div class="p-title">Limpiar seguidos</div><div class="p-desc">Bajar de 2.176 a menos de 500.</div></div></div>
+  <div class="priority-item"><div class="p-num">7</div><div class="p-content"><div class="p-title">Armar tienda online + embudo</div><div class="p-desc">Tiendanube + Post → Link → Tienda → Compra.</div></div></div>
+</div>
+
+<div class="footer">Auditoría Marzo 2026 &bull; @ladeco.oficial<br>Preparado para escalar La Deco</div>
+
+</div>
+
+<script>
+function switchTab(g,i){
+  document.querySelectorAll('[id^="tab-'+g+'-"]').forEach((t,j)=>t.classList.toggle('active',j===i));
+  const box=document.querySelector('[id="tab-'+g+'-0"]').closest('.chart-box');
+  box.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+}
+
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      e.target.querySelectorAll('.hbar-fill[data-width]').forEach(b=>{b.style.width=b.dataset.width+'%'});
+      e.target.querySelectorAll('[data-count]').forEach(el=>{
+        const t=+el.dataset.count,d=1500,s=performance.now();
+        (function u(n){const p=Math.min((n-s)/d,1);el.textContent=Math.round((1-Math.pow(1-p,3))*t).toLocaleString('es-AR');if(p<1)requestAnimationFrame(u)})(s);
+      });
+      io.unobserve(e.target);
+    }
+  });
+},{threshold:.15});
+document.querySelectorAll('.animate-in').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
